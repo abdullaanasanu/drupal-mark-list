@@ -1,0 +1,12 @@
+<?php
+
+function MarkList()
+{
+  $items = array();
+  $items['add_students'] = array(
+    'title' =>'Add Student',
+    'description'=>'Add new details to database'
+  );
+}
+
+ ?>
