@@ -1,0 +1,52 @@
+<?php
+
+// Schema to create or delete the table from the database in installation and uninstallation.
+function MarkList_schema()
+{
+  $schema['class'] = array(
+    'description' => 'Details of classes',
+    'fields' => array(
+      'id' => array(
+        'description' => 'ID for the class',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'Name of Class',
+        'type' => 'varchar',
+        'length' => '10',
+        'not null' => TRUE,
+      ),
+      'division' => array(
+        'type' => 'varchar',
+        'length' => '1',
+        'not null' => TRUE,
+      )
+    ),
+    'primary key' => array('id'),
+  );
+  $schema['student'] = array(
+    'description' => 'Detail of students',
+    'fields' => array(
+      'id' => array(
+        'description' => 'ID for the Students',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'name' => array(
+        'description' => 'Name of Student',
+        'type' => 'varchar',
+        'length' => '10',
+        'not null' => TRUE,
+      ),
+      'class_id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+      )
+    ),
+    'primary key' => array('id'),
+  );
+  return $schema;
+}
+
+ ?>

@@ -10,6 +10,12 @@ function MarkList_menu()
     'page arguments'=>array('field_for_students'),
     'access callback'=>'access_callback_function',
   );
+  $items['class_adding']=array(
+    'page callback'=>'add_class',
+    'access callback'=>'user_access',
+    'access arguments'=>array('access content'),
+    'type'=>MENU_CALLBACK
+  );
   $items['add_class'] = array(
     'title' =>'Add Class',
     'description'=>'Add new details of classes to database',
@@ -32,13 +38,14 @@ function field_for_students()
     '#type' => 'textfield',
     '#title' => 'Student Name'
   );
+  $result = db_select('class','u')
+  ->fields('u', array('id','name','division'))
+  ->execute()
+  ->fetchAll();
   $form['class']=array(
-    '#type' => 'textfield',
-    '#title' => 'Class'
-  );
-  $form['date_of_birth']=array(
-    '#type' => 'date',
-    '#title' => 'Date of Birth'
+    '#type' => 'select',
+    '#title' => 'Class',
+    '#options' => $result
   );
   $form['#suffix']='<input type="button" id="studentData" value="Submit" class="form-submit">';
 
@@ -54,11 +61,13 @@ function field_for_class()
   $form = array();
   $form['name']=array(
     '#type' => 'textfield',
-    '#title' => 'Class'
+    '#title' => 'Class',
+    '#maxlength' => 10
   );
   $form['division']=array(
     '#type' => 'textfield',
-    '#title' => 'Division'
+    '#title' => 'Division',
+    '#maxlength' => 1
   );
   $form['#suffix']='<input type="button" id="classData" value="Submit" class="form-submit">';
 
@@ -67,5 +76,20 @@ function field_for_class()
   $newToken = drupal_get_token("marker".$user->uid);
   drupal_add_js('var mytoken="'.$newToken.'";', 'inline');
   return $form;
+}
+
+function add_class(){
+  global $user;
+  if (empty($_GET['token']) || !drupal_valid_token($_GET['token'], 'marker'.$user->uid)) {
+    return MENU_ACCESS_DENIED;
+  }else{
+    $id = db_insert('class')
+    ->fields(array(
+      'name'=>filter_xss(ucfirst($_GET['class_name'])),
+      'division'=>filter_xss(ucfirst($_GET['division_name']))
+    ))
+    ->execute();
+    echo filter_xss(ucfirst($_GET['class_name']))." added successfully";
+  }
 }
  ?>
