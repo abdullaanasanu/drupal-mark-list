@@ -1,12 +1,71 @@
 <?php
 
-function MarkList()
+function MarkList_menu()
 {
   $items = array();
   $items['add_students'] = array(
     'title' =>'Add Student',
-    'description'=>'Add new details to database'
+    'description'=>'Add new details to database',
+    'page callback'=>'drupal_get_form',
+    'page arguments'=>array('field_for_students'),
+    'access callback'=>'access_callback_function',
   );
+  $items['add_class'] = array(
+    'title' =>'Add Class',
+    'description'=>'Add new details of classes to database',
+    'page callback'=>'drupal_get_form',
+    'page arguments'=>array('field_for_class'),
+    'access callback'=>'access_callback_function',
+  );
+  return $items;
 }
 
+function access_callback_function()
+{
+  return !user_is_anonymous();
+}
+
+function field_for_students()
+{
+  $form = array();
+  $form['name']=array(
+    '#type' => 'textfield',
+    '#title' => 'Student Name'
+  );
+  $form['class']=array(
+    '#type' => 'textfield',
+    '#title' => 'Class'
+  );
+  $form['date_of_birth']=array(
+    '#type' => 'date',
+    '#title' => 'Date of Birth'
+  );
+  $form['#suffix']='<input type="button" id="studentData" value="Submit" class="form-submit">';
+
+  drupal_add_js(drupal_get_path('module','MarkList'). "/base.js");
+  global $user;
+  $newToken = drupal_get_token("marker".$user->uid);
+  drupal_add_js('var mytoken="'.$newToken.'";', 'inline');
+  return $form;
+}
+
+function field_for_class()
+{
+  $form = array();
+  $form['name']=array(
+    '#type' => 'textfield',
+    '#title' => 'Class'
+  );
+  $form['division']=array(
+    '#type' => 'textfield',
+    '#title' => 'Division'
+  );
+  $form['#suffix']='<input type="button" id="classData" value="Submit" class="form-submit">';
+
+  drupal_add_js(drupal_get_path('module','MarkList'). "/base.js");
+  global $user;
+  $newToken = drupal_get_token("marker".$user->uid);
+  drupal_add_js('var mytoken="'.$newToken.'";', 'inline');
+  return $form;
+}
  ?>
