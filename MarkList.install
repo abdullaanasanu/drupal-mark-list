@@ -36,7 +36,7 @@ function MarkList_schema()
       'name' => array(
         'description' => 'Name of Student',
         'type' => 'varchar',
-        'length' => '10',
+        'length' => '100',
         'not null' => TRUE,
       ),
       'class_id' => array(

@@ -22,8 +22,8 @@ jQuery(document).ready(function(){
       method: 'GET',
       url: 'student_adding',
       data:{
-        class_name: jQuery('#edit-name').val(),
-        division_name: jQuery('#edit-division').val(),
+        name: jQuery('#edit-name').val(),
+        class_id: jQuery('#edit-class').val(),
         token: mytoken
       },
       success:function(data){
