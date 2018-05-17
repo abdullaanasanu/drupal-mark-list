@@ -29,6 +29,13 @@ function MarkList_menu()
     'page arguments'=>array('field_for_class'),
     'access callback'=>'access_callback_function',
   );
+  $items['add_marks'] = array(
+    'title' =>'Add Marks',
+    'description'=>'Add marks of students to database',
+    'page callback'=>'drupal_get_form',
+    'page arguments'=>array('field_for_marks'),
+    'access callback'=>'access_callback_function',
+  );
   return $items;
 }
 
@@ -48,12 +55,8 @@ function field_for_students()
   ->fields('u', array('id','name','division'))
   ->execute()
   ->fetchAll();
-  foreach($result as $key => $value)
-  {
-      $result[$key] = (array) $value;
-  }
   foreach ($result as $r) {
-    $opt[$r['id']] = $r['name'].' - '.$r['division'];
+    $opt[$r->id] = $r->name.' - '.$r->division;
   }
   $form['class']=array(
     '#type' => 'select',
@@ -89,6 +92,42 @@ function field_for_class()
   $newToken = drupal_get_token("marker".$user->uid);
   drupal_add_js('var mytoken="'.$newToken.'";', 'inline');
   return $form;
+}
+
+function field_for_marks()
+{
+  if(isset($_GET['id'])){
+    
+    $form = array();
+    $form['name']=array(
+      '#type' => 'textfield',
+      '#title' => 'Class',
+      '#maxlength' => 10
+    );
+    $form['division']=array(
+      '#type' => 'textfield',
+      '#title' => 'Division',
+      '#maxlength' => 1
+    );
+    $form['#suffix']='<input type="button" id="classData" value="Submit" class="form-submit">';
+
+    drupal_add_js(drupal_get_path('module','MarkList'). "/base.js");
+    global $user;
+    $newToken = drupal_get_token("marker".$user->uid);
+    drupal_add_js('var mytoken="'.$newToken.'";', 'inline');
+    return $form;
+  }else{
+    $result = db_select('class','u')
+    ->fields('u', array('id','name','division'))
+    ->execute()
+    ->fetchAll();
+    $out='';
+    foreach ($result as $r) {
+      $out .= '<a href="add_marks?id='.$r->id.'"><h3><li>'.$r->name.' - '.$r->division.'</li></h3></a>';
+    }
+    $form['#suffix']=$out;
+    return $form;
+  }
 }
 
 function class_name(){
