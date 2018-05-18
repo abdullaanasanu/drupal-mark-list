@@ -42,6 +42,14 @@ function MarkList_menu()
     'access arguments'=>array('access content'),
     'type'=>MENU_CALLBACK
   );
+  $items['mark_list']=array(
+    'title'=>'Students Mark List',
+    'description'=>'Display all students mark by classes',
+    'page callback'=>'mark_list',
+    'access callback'=>'user_access',
+    'access arguments'=>array('access content'),
+    'type'=>MENU_NORMAL_ITEM
+  );
   return $items;
 }
 
@@ -247,4 +255,54 @@ function class_name(){
     }
   }
 
+  function mark_list()
+  {
+    if (isset($_GET['id'])) {
+      $check = db_select('class','u')
+      ->fields('u', array('id','name','division'))
+      ->condition('id',$_GET['id'],'=')
+      ->execute()
+      ->fetchAssoc();
+      if($check){
+        $marks = db_select('marks','u')
+          ->fields('u', array('mark','student_id'))
+          ->condition('class_id',$_GET['id'],'=')
+          ->execute()
+          ->fetchAll();
+        if($marks){
+          $out = '<table><th><td>Name</td><td>Mark</td></th>';
+          $count = 1;
+          foreach ($marks as $m) {
+            $student = db_select('student','u')
+              ->fields('u', array('name'))
+              ->condition('id',$m->student_id,'=')
+              ->execute()
+              ->fetchAssoc();
+            $out .= '<tr><td>'.$count.'</td><td>'.$student['name'].'</td><td>'.$m->mark.'</td></tr>';
+            $count++;
+          }
+          $out .= '</table>';
+          return $out;
+        }else {
+          return 'Students mark is not added';
+        }
+      }else{
+        return 'Invalid class ID';
+      }
+    }else {
+      $result = db_select('class','u')
+      ->fields('u', array('id','name','division'))
+      ->execute()
+      ->fetchAll();
+      $out = '';
+      if($result){
+        foreach ($result as $r) {
+          $out .= '<a href="mark_list?id='.$r->id.'"><h2><li>'.$r->name.' - '.$r->division.'</li></h2></a>';
+        }
+      }else {
+        $out = 'Something went wrong, please contact the admin!';
+      }
+      return $out;
+    }
+  }
  ?>
