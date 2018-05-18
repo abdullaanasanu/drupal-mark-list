@@ -45,6 +45,37 @@ function MarkList_schema()
       )
     ),
     'primary key' => array('id'),
+    'foreign keys' => array(
+      'fk_student_class' => array('table' => 'class', 'columns' => array('id' => 'class_id'))
+    )
+  );
+  $schema['marks'] = array(
+    'description' => 'Mark of students',
+    'fields' => array(
+      'id' => array(
+        'description' => 'ID for the Mark Entry',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
+      'mark' => array(
+        'description' => 'Mark of Student',
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'class_id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'student_id' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+      )
+    ),
+    'primary key' => array('id'),
+    'foreign keys' => array(
+            'fk_mark_class' => array('table' => 'class', 'columns' => array('id' => 'class_id')),
+            'fk_mark_student' => array('table' => 'student', 'columns' => array('id' => 'student_id'))
+          )
   );
   return $schema;
 }

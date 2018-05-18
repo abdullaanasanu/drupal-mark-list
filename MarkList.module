@@ -36,6 +36,12 @@ function MarkList_menu()
     'page arguments'=>array('field_for_marks'),
     'access callback'=>'access_callback_function',
   );
+  $items['student_mark']=array(
+    'page callback'=>'mark',
+    'access callback'=>'user_access',
+    'access arguments'=>array('access content'),
+    'type'=>MENU_CALLBACK
+  );
   return $items;
 }
 
@@ -46,30 +52,35 @@ function access_callback_function()
 
 function field_for_students()
 {
-  $form = array();
-  $form['name']=array(
-    '#type' => 'textfield',
-    '#title' => 'Student Name'
-  );
   $result = db_select('class','u')
   ->fields('u', array('id','name','division'))
   ->execute()
   ->fetchAll();
-  foreach ($result as $r) {
-    $opt[$r->id] = $r->name.' - '.$r->division;
-  }
-  $form['class']=array(
-    '#type' => 'select',
-    '#title' => 'Class',
-    '#options' => $opt
-  );
-  $form['#suffix']='<input type="button" id="studentData" value="Submit" class="form-submit">';
+  if($result){
+    $form = array();
+    $form['name']=array(
+      '#type' => 'textfield',
+      '#title' => 'Student Name'
+    );
+    foreach ($result as $r) {
+      $opt[$r->id] = $r->name.' - '.$r->division;
+    }
+    $form['class']=array(
+      '#type' => 'select',
+      '#title' => 'Class',
+      '#options' => $opt
+    );
+    $form['#suffix']='<input type="button" id="studentData" value="Submit" class="form-submit">';
 
-  drupal_add_js(drupal_get_path('module','MarkList'). "/base.js");
-  global $user;
-  $newToken = drupal_get_token("marker".$user->uid);
-  drupal_add_js('var mytoken="'.$newToken.'";', 'inline');
-  return $form;
+    drupal_add_js(drupal_get_path('module','MarkList'). "/base.js");
+    global $user;
+    $newToken = drupal_get_token("marker".$user->uid);
+    drupal_add_js('var mytoken="'.$newToken.'";', 'inline');
+    return $form;
+  }else{
+    $form['#suffix']='There no class, <a href="add_class">click here</a> to add class';
+    return $form;
+  }
 }
 
 function field_for_class()
@@ -115,7 +126,7 @@ function field_for_marks()
         '#title' => 'Mark'
       );
       $form['#suffix']='<input type="button" id="studentMark" value="Submit" class="form-submit">
-      <h4>Name : '.$students['name'].'</h4><h4>Class : '.$result['name'].' - '.$result['division'].'</h4>';
+      <h4>Name : '.$students['name'].'</h4><h4>Class : '.$result['name'].' - '.$result['division'].'</h4><a href="add_marks?id='.$_GET['id'].'">Back to class</a>';
       drupal_add_js(drupal_get_path('module','MarkList'). "/base.js");
       global $user;
       $newToken = drupal_get_token("marker".$user->uid);
@@ -129,9 +140,13 @@ function field_for_marks()
         ->condition('class_id',$_GET['id'],'=')
         ->execute()
         ->fetchAll();
-        $out = '<h3>Class : '.$result['name'].' - '.$result['division'].'</h3>';
-        foreach ($students as $s) {
-          $out .= '<a href="add_marks?id='.$_GET['id'].'&sid='.$s->id.'"><li>'.$s->name.'</li></a>';
+        if($students){
+          $out = '<h3>Class : '.$result['name'].' - '.$result['division'].'</h3>';
+          foreach ($students as $s) {
+            $out .= '<a href="add_marks?id='.$_GET['id'].'&sid='.$s->id.'"><li>'.$s->name.'</li></a>';
+          }
+        }else {
+          $out = 'There is no students in the class ('.$result['name'].' - '.$result['division'].'), <a href="add_student">click here</a> to add students';
         }
         $form['#suffix']= $out;
         return $form;
@@ -145,12 +160,17 @@ function field_for_marks()
     ->fields('u', array('id','name','division'))
     ->execute()
     ->fetchAll();
+    if($result){
     $out='';
     foreach ($result as $r) {
       $out .= '<a href="add_marks?id='.$r->id.'"><h3><li>'.$r->name.' - '.$r->division.'</li></h3></a>';
     }
     $form['#suffix']=$out;
     return $form;
+  }else {
+    $form['#suffix']='There no class, <a href="add_class">click here</a> to add class';
+    return $form;
+  }
   }
 }
 
@@ -181,6 +201,49 @@ function class_name(){
       ))
       ->execute();
       echo filter_xss(ucfirst($_GET['name']))." added successfully";
+    }
+  }
+
+  function mark(){
+    global $user;
+    if (empty($_GET['token']) || !drupal_valid_token($_GET['token'], 'marker'.$user->uid)) {
+      return MENU_ACCESS_DENIED;
+    }else{
+      $student = db_select('student','u')
+      ->fields('u', array('id','name'))
+      ->condition('class_id',$_GET['class_id'],'=')
+      ->condition('id',$_GET['student_id'],'=')
+      ->execute()
+      ->fetchAssoc();
+      if($student){
+        $check = db_select('marks','u')
+        ->fields('u', array('id'))
+        ->condition('class_id',$_GET['class_id'],'=')
+        ->condition('student_id',$_GET['student_id'],'=')
+        ->execute()
+        ->fetchAssoc();
+        if($check){
+          $update = db_update('marks')
+          ->fields(array(
+            'mark' =>filter_xss($_GET['mark'])
+          ))
+          ->condition('class_id',$_GET['class_id'],'=')
+          ->condition('student_id',$_GET['student_id'],'=')
+          ->execute();
+          echo $student['name']."'s mark updated successfully";
+        }else{
+          $id = db_insert('marks')
+          ->fields(array(
+            'mark'=>filter_xss($_GET['mark']),
+            'class_id'=>$_GET['class_id'],
+            'student_id'=>$_GET['student_id']
+          ))
+          ->execute();
+          echo $student['name']."'s mark added successfully";
+        }
+      }else{
+        return MENU_ACCESS_DENIED;
+      }
     }
   }
 
