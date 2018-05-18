@@ -97,25 +97,49 @@ function field_for_class()
 function field_for_marks()
 {
   if(isset($_GET['id'])){
-    
-    $form = array();
-    $form['name']=array(
-      '#type' => 'textfield',
-      '#title' => 'Class',
-      '#maxlength' => 10
-    );
-    $form['division']=array(
-      '#type' => 'textfield',
-      '#title' => 'Division',
-      '#maxlength' => 1
-    );
-    $form['#suffix']='<input type="button" id="classData" value="Submit" class="form-submit">';
-
-    drupal_add_js(drupal_get_path('module','MarkList'). "/base.js");
-    global $user;
-    $newToken = drupal_get_token("marker".$user->uid);
-    drupal_add_js('var mytoken="'.$newToken.'";', 'inline');
-    return $form;
+    $result = db_select('class','u')
+    ->fields('u', array('id','name','division'))
+    ->condition('id',$_GET['id'],'=')
+    ->execute()
+    ->fetchAssoc();
+    if(isset($_GET['sid'])){
+      $students = db_select('student','u')
+      ->fields('u', array('id','name'))
+      ->condition('class_id',$_GET['id'],'=')
+      ->condition('id',$_GET['sid'],'=')
+      ->execute()
+      ->fetchAssoc();
+      $form = array();
+      $form['mark'] = array(
+        '#type' => 'textfield',
+        '#title' => 'Mark'
+      );
+      $form['#suffix']='<input type="button" id="studentMark" value="Submit" class="form-submit">
+      <h4>Name : '.$students['name'].'</h4><h4>Class : '.$result['name'].' - '.$result['division'].'</h4>';
+      drupal_add_js(drupal_get_path('module','MarkList'). "/base.js");
+      global $user;
+      $newToken = drupal_get_token("marker".$user->uid);
+      drupal_add_js('var mytoken="'.$newToken.'";', 'inline');
+      return $form;
+    }else{
+      if($result){
+        $form = array();
+        $students = db_select('student','u')
+        ->fields('u', array('id','name'))
+        ->condition('class_id',$_GET['id'],'=')
+        ->execute()
+        ->fetchAll();
+        $out = '<h3>Class : '.$result['name'].' - '.$result['division'].'</h3>';
+        foreach ($students as $s) {
+          $out .= '<a href="add_marks?id='.$_GET['id'].'&sid='.$s->id.'"><li>'.$s->name.'</li></a>';
+        }
+        $form['#suffix']= $out;
+        return $form;
+      }else{
+        $form['#suffix']= 'Invalid Class ID!';
+        return $form;
+      }
+    }
   }else{
     $result = db_select('class','u')
     ->fields('u', array('id','name','division'))

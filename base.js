@@ -34,4 +34,32 @@ jQuery(document).ready(function(){
       }
     });
   });
+  jQuery('#studentMark').click(function(){
+    jQuery.ajax({
+      method: 'GET',
+      url: 'student_mark',
+      data:{
+        student_id: urlParam('sid'),
+        class_id: urlParam('id'),
+        mark: jQuery('#edit-mark').val(),
+        token: mytoken
+      },
+      success:function(data){
+        jQuery('<div id="messages"><div class="section clearfix"><div class="messages status"><h2 class="element-invisible">Status message</h2>'+data+'</div></div></div>').insertAfter('#header');
+      },
+      error:function(){
+        jQuery('<div id="messages"><div class="section clearfix"><div class="messages error"><h2 class="element-invisible">Error message</h2>Every Field is need to fill up!</div></div></div>').insertAfter('#header');
+      }
+    });
+  });
 });
+
+urlParam = function(name){
+    var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+    if (results==null){
+       return null;
+    }
+    else{
+       return decodeURI(results[1]) || 0;
+    }
+}
